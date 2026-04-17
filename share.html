@@ -7,84 +7,91 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
         body { background: #000; color: #fff; font-family: 'Montserrat', sans-serif; text-align: center; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        .bottle { width: 80%; max-height: 400px; object-fit: contain; margin: 2rem 0; }
+        .bottle { width: 80%; max-height: 400px; object-fit: contain; margin: 2rem 0; opacity: 0; transition: opacity 0.5s; }
+        .bottle.loaded { opacity: 1; }
         h2 { font-weight: 900; letter-spacing: 2px; text-transform: uppercase; font-size: 1.2rem; margin-bottom: 0.5rem; }
-        p { font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-bottom: 2rem; }
-        .share-btn { background: #fff; color: #000; padding: 1.2rem; width: 100%; font-weight: 900; text-transform: uppercase; border: none; letter-spacing: 2px; cursor: pointer; }
-        .instruction { font-size: 0.7rem; color: #d4af37; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; }
+        .share-btn { background: #fff; color: #000; padding: 1.2rem; width: 100%; font-weight: 900; text-transform: uppercase; border: none; letter-spacing: 2px; cursor: pointer; display: none; }
+        .share-btn.active { display: block; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255,255,255,0.4); } 70% { box-shadow: 0 0 0 15px rgba(255,255,255,0); } 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); } }
+        .loader { border: 3px solid #333; border-top: 3px solid #d4af37; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
 
-    <h2 id="status">YOUR MATCH IS READY</h2>
-    <p>POST TO ENTER THE GRAND PRIZE DRAW</p>
+    <div id="loading-zone">
+        <div class="loader"></div>
+        <h2 id="status-msg">PREPARING IMAGE...</h2>
+    </div>
 
     <img id="scent-img" class="bottle">
     
     <button id="share-trigger" class="share-btn">POST TO INSTAGRAM</button>
 
-    <div id="guide">
-        <p class="instruction">1. WE'VE COPIED YOUR CAPTION</p>
-        <p class="instruction">2. SELECT 'FEED' OR 'POST'</p>
-        <p class="instruction">3. PASTE CAPTION TO ENTER</p>
-    </div>
-
     <script>
         const params = new URLSearchParams(window.location.search);
         const scent = params.get('scent') || 'blackVanilla';
         
-        const scentNames = { 
-            blackVanilla: "BLACK VANILLA", aquaBergamot: "AQUA BERGAMOT", 
-            blueLavender: "BLUE LAVENDER", whiteOak: "WHITE OAK", copperSantal: "COPPER SANTAL" 
-        };
-
         const imgs = { 
             blackVanilla: "vanilla.png", aquaBergamot: "aqua.png", 
             blueLavender: "lavender.png", whiteOak: "oak.png", copperSantal: "copper.png" 
         };
 
-        const imgPath = imgs[scent];
-        document.getElementById('scent-img').src = imgPath;
+        const imgElement = document.getElementById('scent-img');
+        const fileName = imgs[scent];
+        imgElement.src = fileName;
 
-        // THE CAPTION PAYLOAD
         const caption = `My Fine Fragrance match! #AxeXUltra26 #SmellFineAllNight #AXEFineFragrances @axe.sa`;
 
-        // 1. AUTO-COPY CAPTION ON LANDING
-        function copyToClipboard(text) {
+        // 1. AUTO-COPY CAPTION
+        function copyCaption() {
             const el = document.createElement('textarea');
-            el.value = text;
+            el.value = caption;
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
             document.body.removeChild(el);
         }
-        copyToClipboard(caption);
 
-        // 2. NATIVE SHARE LOGIC
-        document.getElementById('share-trigger').onclick = async () => {
+        // 2. PREP FILE FOR NATIVE SHARE
+        let shareFile = null;
+
+        async function prepareFile() {
             try {
-                // Fetch the image and convert to a file the phone can "share"
-                const response = await fetch(imgPath);
+                // We use the absolute path to avoid any resolution errors
+                const response = await fetch(window.location.origin + window.location.pathname.replace('share.html', '') + fileName);
                 const blob = await response.blob();
-                const file = new File([blob], 'axe-match.png', { type: blob.type });
+                shareFile = new File([blob], fileName, { type: 'image/png' });
+                
+                // Once ready, show the button
+                document.getElementById('loading-zone').style.display = 'none';
+                imgElement.classList.add('loaded');
+                document.getElementById('share-trigger').classList.add('active');
+                copyCaption();
+            } catch (err) {
+                console.error("Preparation failed", err);
+                document.getElementById('status-msg').innerText = "TAP IMAGE TO SAVE & POST";
+            }
+        }
 
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        document.getElementById('share-trigger').onclick = async () => {
+            if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+                try {
                     await navigator.share({
-                        files: [file],
-                        title: 'AXE Signature Scent',
-                        text: caption // Some apps will pick this up, IG usually requires manual paste
+                        files: [shareFile],
+                        title: 'AXE Fine Fragrance',
+                        text: caption
                     });
-                } else {
-                    // Fallback for older browsers
-                    alert("Your device doesn't support direct sharing. Long press the image to save and post manually!");
-                    window.location.href = "instagram://app";
+                } catch (err) {
+                    console.log("Share cancelled or failed");
                 }
-            } catch (error) {
-                console.error('Share failed:', error);
-                // Last resort fallback
-                window.location.href = "instagram://app";
+            } else {
+                alert("Device doesn't support direct file sharing. Long-press the image to save and post manually!");
             }
         };
+
+        // Start prep on load
+        window.onload = prepareFile;
     </script>
 </body>
 </html>

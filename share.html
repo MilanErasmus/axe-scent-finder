@@ -5,51 +5,28 @@
     <title>AXE Social Entry</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        
-        /* Visibility Fix: All text is hard-coded to White */
         * { box-sizing: border-box; color: #ffffff !important; font-family: 'Montserrat', sans-serif; }
-        
         body { background: #000; text-align: center; padding: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
-        
         h2 { font-weight: 900; text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 2px; }
         p { color: rgba(255,255,255,0.7) !important; font-size: 0.8rem; margin-bottom: 1.5rem; }
-        
         .bottle { width: 75%; max-height: 380px; object-fit: contain; margin: 1.5rem 0; opacity: 0; transition: opacity 0.5s; }
         .bottle.loaded { opacity: 1; }
-
-        /* Button Styling */
         .action-btn { width: 100%; padding: 1.2rem; font-weight: 900; text-transform: uppercase; border: none; letter-spacing: 2px; cursor: pointer; margin-bottom: 1rem; transition: 0.3s; }
-        
-        #copy-btn { background: #d4af37 !important; color: #000 !important; } /* Gold */
-        #share-btn { background: #fff !important; color: #000 !important; display: none; } /* White */
-        
+        #copy-btn { background: #d4af37 !important; color: #000 !important; }
+        #share-btn { background: #fff !important; color: #000 !important; display: none; }
         .instruction { color: #d4af37 !important; font-size: 0.7rem; font-weight: 700; margin-top: 1rem; text-transform: uppercase; letter-spacing: 1px; }
-        
-        /* Loader */
         .loader { border: 3px solid #333; border-top: 3px solid #d4af37; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 1rem; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-
-    <div id="loading-zone">
-        <div class="loader"></div>
-        <h2 style="font-size: 0.8rem;">REVEALING YOUR MATCH...</h2>
-    </div>
-
-    <h2 id="status-head" style="display:none;">ENTRY STEP 1</h2>
+    <div id="loading-zone"><div class="loader"></div><h2 style="font-size: 0.8rem;">LOADING MATCH...</h2></div>
+    <h2 id="status-head" style="display:none;">STEP 1</h2>
     <p id="status-sub" style="display:none;">COPY CAPTION TO ENTER THE DRAW</p>
-
     <img id="scent-img" class="bottle">
-    
     <button id="copy-btn" class="action-btn" style="display:none;">1. COPY CAPTION</button>
-    
     <button id="share-btn" class="action-btn">2. POST TO INSTAGRAM</button>
-
-    <div id="guide" style="display:none;">
-        <p class="instruction">PASTE CAPTION & TAG @AXE.SA TO WIN</p>
-    </div>
-
+    <div id="guide" style="display:none;"><p class="instruction">PASTE CAPTION & TAG @AXE.SA TO WIN</p></div>
     <script>
         const params = new URLSearchParams(window.location.search);
         const scent = params.get('scent') || 'blackVanilla';
@@ -57,19 +34,14 @@
         const fileName = imgs[scent];
         const imgElement = document.getElementById('scent-img');
         imgElement.src = fileName;
-        
         const caption = `My Fine Fragrance match! #AxeXUltra26 #SmellFineAllNight #AXEFineFragrances @axe.sa`;
-
         let shareFile = null;
 
-        // PREP IMAGE FILE
         async function prepare() {
             try {
                 const response = await fetch(window.location.origin + window.location.pathname.replace('share.html', '') + fileName);
                 const blob = await response.blob();
                 shareFile = new File([blob], fileName, { type: 'image/png' });
-                
-                // Ready state
                 document.getElementById('loading-zone').style.display = 'none';
                 document.getElementById('status-head').style.display = 'block';
                 document.getElementById('status-sub').style.display = 'block';
@@ -78,40 +50,22 @@
             } catch (err) { console.error(err); }
         }
 
-        // STEP 1: COPY LOGIC
         document.getElementById('copy-btn').onclick = async () => {
-            try {
-                await navigator.clipboard.writeText(caption);
-            } catch (err) {
-                // Fallback for older browsers
-                const el = document.createElement('textarea');
-                el.value = caption;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
+            try { await navigator.clipboard.writeText(caption); } catch (err) {
+                const el = document.createElement('textarea'); el.value = caption; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
             }
-
-            // Visual Handoff
             document.getElementById('copy-btn').style.display = 'none';
             document.getElementById('share-btn').style.display = 'block';
-            document.getElementById('status-head').innerText = "ENTRY STEP 2";
-            document.getElementById('status-sub').innerText = "NOW SHARE YOUR IMAGE";
+            document.getElementById('status-head').innerText = "STEP 2";
+            document.getElementById('status-sub').innerText = "SHARE YOUR IMAGE TO FEED";
             document.getElementById('guide').style.display = 'block';
         };
 
-        // STEP 2: SHARE LOGIC
         document.getElementById('share-btn').onclick = async () => {
             if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-                try {
-                    // Share ONLY files to ensure clipboard is preserved
-                    await navigator.share({ files: [shareFile] });
-                } catch (err) { console.log("Share cancelled"); }
-            } else {
-                alert("Hold the image to save and post manually!");
-            }
+                try { await navigator.share({ files: [shareFile] }); } catch (err) { console.log("Share cancelled"); }
+            } else { alert("Long-press the image to save and post manually!"); }
         };
-
         window.onload = prepare;
     </script>
 </body>

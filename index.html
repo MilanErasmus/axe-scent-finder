@@ -16,6 +16,7 @@
         #game-container { width: 100%; max-width: 420px; height: 100vh; max-height: 850px; position: relative; overflow: hidden; display: flex; flex-direction: column; background: #000; }
         
         .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('start-background.png'); z-index: 1; }
+        
         .view { display: none; flex-direction: column; height: 100%; padding: 2.5rem 2rem; z-index: 10; animation: slideIn 0.8s var(--ease) forwards; }
         .view.active { display: flex; }
         @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -45,23 +46,36 @@
 <body>
     <main id="game-container">
         <div class="bg-layer"></div>
+        
         <section id="screensaver" class="view active" style="background-image:url('holding-screen.png'); background-size:cover;"></section>
-        <section id="start" class="view" style="justify-content:center; align-items:center;">
+        
+        <section id="start-view" class="view" style="justify-content:center; align-items:center;">
             <img src="logo.png" style="width:50%; margin-bottom:2rem;">
             <h1>FIND YOUR<br>SIGNATURE SCENT</h1>
             <button id="start-btn" class="primary-btn">START EXPERIENCE</button>
         </section>
-        <section id="quiz" class="view" style="justify-content:center;"><h2 id="q-text"></h2><div id="opts"></div></section>
-        <section id="results-screen" class="view">
+
+        <section id="quiz-view" class="view" style="justify-content:center;">
+            <h2 id="q-text"></h2>
+            <div id="opts-container"></div>
+        </section>
+
+        <section id="results-view" class="view">
             <div class="res-img-wrap"><img id="res-img" src=""></div>
-            <div class="res-content"><h3 style="color:var(--axe-accent) !important; letter-spacing:3px; font-size:0.7rem; margin-bottom:10px;">MATCHED SCENT:</h3><h1 id="res-title"></h1><p id="res-desc" style="font-size:0.8rem;"></p></div>
+            <div class="res-content">
+                <h3 style="color:var(--axe-accent) !important; letter-spacing:3px; font-size:0.7rem; margin-bottom:10px;">MATCHED SCENT:</h3>
+                <h1 id="res-title"></h1>
+                <p id="res-desc" style="font-size:0.8rem;"></p>
+            </div>
+
             <div id="prize-modal">
                 <div style="background:var(--axe-accent); color:#000 !important; padding:0.2rem 1rem; font-weight:900; font-size:0.7rem; margin-bottom:1rem;">GRAND PRIZE ENTRY</div>
                 <h2 style="font-size:1.2rem; margin-bottom:1rem;">SHARE YOUR SCENT TO ENTER THE DRAW</h2>
-                <button class="platform-btn" onclick="showQR('instagram')">SHARE TO INSTAGRAM</button>
-                <button class="platform-btn" onclick="showQR('twitter')">SHARE TO X (TWITTER)</button>
-                <button class="platform-btn" onclick="showQR('facebook')">SHARE TO FACEBOOK</button>
+                <button class="platform-btn" onclick="generateQR('instagram')">SHARE TO INSTAGRAM</button>
+                <button class="platform-btn" onclick="generateQR('twitter')">SHARE TO X (TWITTER)</button>
+                <button class="platform-btn" onclick="generateQR('facebook')">SHARE TO FACEBOOK</button>
             </div>
+
             <div id="qr-view">
                 <h2 id="qr-title" style="color:var(--axe-accent) !important;"></h2>
                 <div id="qrcode"></div>
@@ -70,8 +84,11 @@
             </div>
         </section>
     </main>
+
     <script>
+        // --- CONFIG ---
         const BASE_URL = "https://milanerasmus.github.io/axe-scent-finder"; 
+
         const outcomes = {
             aquaBergamot: { t: "AQUA BERGAMOT", f: "aqua.png", d: "Fresh. Clean. Sharply modern." },
             blueLavender: { t: "BLUE LAVENDER", f: "lavender.png", d: "Cool. Smooth. Understated." },
@@ -79,38 +96,88 @@
             blackVanilla: { t: "BLACK VANILLA", f: "vanilla.png", d: "Warm. Smooth. Addictive." },
             copperSantal: { t: "COPPER SANTAL", f: "copper.png", d: "Bold. Spiced. Distinct." }
         };
-        const questions = [
+
+        const questionsList = [
             { q: "What’s your signature vibe?", options: [ { t: "The Tastemaker", s: "whiteOak" }, { t: "The Minimalist", s: "aquaBergamot" }, { t: "The Social Operator", s: "blueLavender" }, { t: "The Explorer", s: "copperSantal" }, { t: "The Creative", s: "blackVanilla" } ] },
             { q: "Pick your ideal SA getaway?", options: [ { t: "Clifton Villa", s: "whiteOak" }, { t: "Kruger Lodge", s: "copperSantal" }, { t: "Winelands Estate", s: "blueLavender" }, { t: "Ballito Beach", s: "aquaBergamot" }, { t: "Franschhoek", s: "blackVanilla" } ] },
             { q: "The energy you bring into a room:", options: [ { t: "Quiet confidence", s: "whiteOak" }, { t: "Warm and inviting", s: "blackVanilla" }, { t: "Fresh and uplifting", s: "aquaBergamot" }, { t: "Magnetic and bold", s: "copperSantal" }, { t: "Unpredictable", s: "blueLavender" } ] }
         ];
-        let current = 0, scores = { aquaBergamot:0, blueLavender:0, whiteOak:0, blackVanilla:0, copperSantal:0 }, match = "";
-        function show(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function loadQ() {
-            const data = questions[current]; document.getElementById('q-text').innerText = data.q;
-            const container = document.getElementById('opts'); container.innerHTML = '';
-            data.options.forEach(o => {
-                const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = o.t;
-                b.onclick = () => { scores[o.s]++; if(current < questions.length-1) { current++; loadQ(); } else { calc(); } };
-                container.appendChild(b);
+
+        let currentQuestion = 0;
+        let scores = { aquaBergamot:0, blueLavender:0, whiteOak:0, blackVanilla:0, copperSantal:0 };
+        let finalMatch = "";
+
+        // --- CORE FUNCTIONS ---
+        function switchView(viewId) {
+            console.log("Switching to:", viewId);
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const target = document.getElementById(viewId);
+            if(target) target.classList.add('active');
+        }
+
+        function renderQuestion() {
+            const data = questionsList[currentQuestion];
+            document.getElementById('q-text').innerText = data.q;
+            const container = document.getElementById('opts-container');
+            container.innerHTML = '';
+
+            data.options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt.t;
+                btn.onclick = () => {
+                    scores[opt.s]++;
+                    if(currentQuestion < questionsList.length - 1) {
+                        currentQuestion++;
+                        renderQuestion();
+                    } else {
+                        calculateResult();
+                    }
+                };
+                container.appendChild(btn);
             });
         }
-        function calc() {
-            match = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-            document.getElementById('res-title').innerText = outcomes[match].t;
-            document.getElementById('res-desc').innerText = outcomes[match].d;
-            document.getElementById('res-img').src = outcomes[match].f;
-            show('results-screen');
-            setTimeout(() => { document.getElementById('prize-modal').classList.add('active'); }, 5000);
+
+        function calculateResult() {
+            finalMatch = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            document.getElementById('res-title').innerText = outcomes[finalMatch].t;
+            document.getElementById('res-desc').innerText = outcomes[finalMatch].d;
+            document.getElementById('res-img').src = outcomes[finalMatch].f;
+            
+            switchView('results-view');
+
+            // 5 Second Reveal Delay
+            setTimeout(() => {
+                document.getElementById('prize-modal').classList.add('active');
+            }, 5000);
         }
-        function showQR(plat) {
-            document.getElementById('qr-title').innerText = `POST TO ${plat.toUpperCase()}`;
-            const qrBox = document.getElementById('qrcode'); qrBox.innerHTML = "";
-            new QRCode(qrBox, { text: `${BASE_URL}/share.html?scent=${match}&plat=${plat}`, width: 200, height: 200 });
+
+        function generateQR(platform) {
+            document.getElementById('qr-title').innerText = `POST TO ${platform.toUpperCase()}`;
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = "";
+            new QRCode(qrContainer, {
+                text: `${BASE_URL}/share.html?scent=${finalMatch}&plat=${platform}`,
+                width: 200,
+                height: 200
+            });
             document.getElementById('qr-view').classList.add('active');
         }
-        document.body.onclick = () => { if(document.getElementById('screensaver').classList.contains('active')) show('start'); };
-        document.getElementById('start-btn').onclick = (e) => { e.stopPropagation(); loadQ(); show('quiz'); };
+
+        // --- EVENT LISTENERS ---
+        document.body.onclick = () => {
+            const screensaver = document.getElementById('screensaver');
+            if(screensaver.classList.contains('active')) {
+                switchView('start-view');
+            }
+        };
+
+        document.getElementById('start-btn').onclick = (e) => {
+            e.stopPropagation();
+            console.log("Start button clicked");
+            renderQuestion();
+            switchView('quiz-view');
+        };
     </script>
 </body>
 </html>

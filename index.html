@@ -4,30 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>AXE Fine Fragrance - Signature Scent Finder</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap');
-        :root { --axe-black: #000; --axe-accent: #d4af37; --ease: cubic-bezier(0.19, 1, 0.22, 1); }
+
+        :root {
+            --axe-black: #000000;
+            --axe-accent: #d4af37; 
+            --text-main: #ffffff;
+            --ease: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; }
-        body { background: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; }
-        #game-container { width: 100%; max-width: 420px; height: 100vh; max-height: 850px; position: relative; overflow: hidden; display: flex; flex-direction: column; }
-        .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('start-background.png'); z-index: 1; animation: breath 20s infinite alternate ease-in-out; }
+        body { background-color: #000; display: flex; justify-content: center; align-items: center; min-height: 100vh; overflow: hidden; -webkit-tap-highlight-color: transparent; }
+
+        #game-container {
+            width: 100%; max-width: 420px; height: 100vh; max-height: 850px;
+            background-color: var(--axe-black); position: relative; overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        .bg-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url('start-background.png');
+            z-index: 1; animation: breath 20s infinite alternate ease-in-out;
+        }
         @keyframes breath { from { transform: scale(1); } to { transform: scale(1.1); } }
+
         .view { display: none; flex-direction: column; height: 100%; padding: 2.5rem 2rem; z-index: 10; animation: slideUp 0.8s var(--ease) forwards; }
         .view.active { display: flex; }
         @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        h1 { font-size: 2.2rem; line-height: 1; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; }
+
+        h1 { font-size: 2.2rem; line-height: 1; font-weight: 900; text-transform: uppercase; margin-bottom: 1rem; text-align: center; }
+        h2 { font-size: 1.4rem; font-weight: 900; text-transform: uppercase; margin-bottom: 2rem; text-align: center; }
         p { font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.8); margin-bottom: 2rem; text-align: center; }
+
         button { width: 100%; padding: 1.1rem; border: none; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
         .primary-btn { background: #fff; color: #000; margin-bottom: 1rem; }
         .option-btn { background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.8rem; text-align: center; }
+        
         #results-screen { padding: 0; justify-content: flex-start; align-items: center; }
         .res-img-wrap { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         #res-img { width: 100%; height: 100%; object-fit: contain; }
         .res-content { position: relative; z-index: 2; padding: 4rem 2rem; text-shadow: 0 0 20px #000; width: 100%; text-align: center; }
-        #prize-modal { position: absolute; bottom: -110%; left: 0; width: 100%; height: auto; background: linear-gradient(to top, #000 90%, transparent); z-index: 50; padding: 2rem; transition: bottom 1s var(--ease); display: flex; flex-direction: column; align-items: center; }
+
+        #prize-modal {
+            position: absolute; bottom: -110%; left: 0; width: 100%; height: auto;
+            background: linear-gradient(to top, #000 90%, transparent);
+            z-index: 50; padding: 2rem; transition: bottom 1s var(--ease);
+            display: flex; flex-direction: column; align-items: center;
+        }
         #prize-modal.active { bottom: 0; }
+
         .platform-btn { background: rgba(0,0,0,0.8); color: #fff; border: 1px solid var(--axe-accent); margin-bottom: 0.8rem; font-size: 0.7rem; backdrop-filter: blur(10px); }
+
         #qr-view { position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; transition: top 0.6s var(--ease); padding: 3rem 2rem; display: flex; flex-direction: column; align-items: center; }
         #qr-view.active { top: 0; }
         #qrcode { background: #fff; padding: 10px; border-radius: 5px; margin: 2rem 0; }
@@ -37,34 +70,47 @@
     <main id="game-container">
         <div class="bg-layer"></div>
         <section id="screensaver" class="view active" style="background-image:url('holding-screen.png'); background-size:cover;"></section>
+
         <section id="start" class="view" style="justify-content:center; align-items:center; text-align:center;">
             <img src="logo.png" style="width:50%; margin-bottom:2rem;">
             <h1>FIND YOUR<br>SIGNATURE SCENT</h1>
+            <p>Ready to flex? Discover your fragrance energy at Ultra SA.</p>
             <button id="start-btn" class="primary-btn">START EXPERIENCE</button>
         </section>
-        <section id="quiz" class="view" style="justify-content:center;"><h2 id="q-text" style="text-align:center; margin-bottom:2rem;"></h2><div id="opts"></div></section>
+
+        <section id="quiz" class="view" style="justify-content:center;">
+            <h2 id="q-text"></h2>
+            <div id="opts"></div>
+        </section>
+
         <section id="results-screen" class="view">
             <div class="res-img-wrap"><img id="res-img" src=""></div>
-            <div class="res-content"><h3 style="color:var(--axe-accent); letter-spacing:3px; font-size:0.7rem;">MATCHED SCENT:</h3><h1 id="res-title"></h1><p id="res-desc" style="font-size:0.8rem;"></p></div>
+            <div class="res-content">
+                <h3 style="color:var(--axe-accent); letter-spacing:3px; font-size:0.7rem;">MATCHED SCENT:</h3>
+                <h1 id="res-title"></h1>
+                <p id="res-desc" style="font-size:0.8rem;"></p>
+            </div>
+
             <div id="prize-modal">
                 <div style="background:var(--axe-accent); color:#000; padding:0.2rem 1rem; font-weight:900; font-size:0.7rem; margin-bottom:1rem;">GRAND PRIZE ENTRY</div>
                 <h2 style="font-size:1.2rem; margin-bottom:1rem; text-align:center;">SHARE YOUR SCENT TO ENTER THE DRAW</h2>
                 <button class="platform-btn" onclick="showQR('instagram')">SHARE TO INSTAGRAM</button>
                 <button class="platform-btn" onclick="showQR('twitter')">SHARE TO X (TWITTER)</button>
                 <button class="platform-btn" onclick="showQR('facebook')">SHARE TO FACEBOOK</button>
+                <button onclick="location.reload()" style="background:none; color:#fff; font-size:0.6rem; margin-top:1rem;">RESTART SEARCH</button>
             </div>
+
             <div id="qr-view">
                 <h2 id="qr-title" style="color:var(--axe-accent);"></h2>
                 <div id="qrcode"></div>
-                <p style="font-weight:900; font-size:0.8rem;">SCAN TO AUTO-POST</p>
+                <p style="font-weight:900; font-size:0.8rem;">SCAN WITH YOUR PHONE TO AUTO-POST</p>
                 <button onclick="document.getElementById('qr-view').classList.remove('active')" style="background:none; color:#fff; margin-top:auto;">BACK</button>
             </div>
         </section>
     </main>
-    <script>
-        // STEP 1: CHANGE THIS TO YOUR LIVE GITHUB URL AFTER DEPLOYING
-        const BASE_URL = "https://milanerasmus.github.io/axe-scent-finder"; 
 
+    <script>
+        const BASE_URL = "https://milanerasmus.github.io/axe-scent-finder"; 
         const outcomes = {
             aquaBergamot: { t: "AQUA BERGAMOT", f: "aqua.png", d: "Fresh. Clean. Sharply modern." },
             blueLavender: { t: "BLUE LAVENDER", f: "lavender.png", d: "Cool. Smooth. Understated." },
@@ -72,22 +118,26 @@
             blackVanilla: { t: "BLACK VANILLA", f: "vanilla.png", d: "Warm. Smooth. Addictive." },
             copperSantal: { t: "COPPER SANTAL", f: "copper.png", d: "Bold. Spiced. Distinct." }
         };
-        const questions = [
+        const qs = [
             { q: "What’s your signature vibe?", options: [ { t: "The Tastemaker", s: "whiteOak" }, { t: "The Minimalist", s: "aquaBergamot" }, { t: "The Social Operator", s: "blueLavender" }, { t: "The Explorer", s: "copperSantal" }, { t: "The Creative", s: "blackVanilla" } ] },
-            { q: "Pick your ideal getaway:", options: [ { t: "Clifton Villa", s: "whiteOak" }, { t: "Kruger Lodge", s: "copperSantal" }, { t: "Winelands Estate", s: "blueLavender" }, { t: "Beachfront", s: "aquaBergamot" }, { t: "Franschhoek", s: "blackVanilla" } ] },
+            { q: "Pick your ideal SA getaway:", options: [ { t: "Clifton Villa", s: "whiteOak" }, { t: "Kruger Lodge", s: "copperSantal" }, { t: "Winelands Estate", s: "blueLavender" }, { t: "Beachfront", s: "aquaBergamot" }, { t: "Franschhoek", s: "blackVanilla" } ] },
             { q: "How bold is your fragrance game?", options: [ { t: "Subtle but intentional", s: "whiteOak" }, { t: "Smooth with presence", s: "blueLavender" }, { t: "Clean and noticeable", s: "aquaBergamot" }, { t: "Warm and addictive", s: "blackVanilla" }, { t: "Distinct", s: "copperSantal" } ] }
         ];
+
         let current = 0, scores = { aquaBergamot:0, blueLavender:0, whiteOak:0, blackVanilla:0, copperSantal:0 }, match = "";
+
         function show(id) { document.querySelectorAll('.view').forEach(v => v.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        
         function loadQ() {
-            const data = questions[current]; document.getElementById('q-text').innerText = data.q;
+            const data = qs[current]; document.getElementById('q-text').innerText = data.q;
             const container = document.getElementById('opts'); container.innerHTML = '';
             data.options.forEach(o => {
                 const b = document.createElement('button'); b.className = 'option-btn'; b.innerText = o.t;
-                b.onclick = () => { scores[o.s]++; if(current < questions.length-1) { current++; loadQ(); } else { calc(); } };
+                b.onclick = () => { scores[o.s]++; if(current < qs.length-1) { current++; loadQ(); } else { calc(); } };
                 container.appendChild(b);
             });
         }
+
         function calc() {
             match = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
             document.getElementById('res-title').innerText = outcomes[match].t;
@@ -96,12 +146,14 @@
             show('results-screen');
             setTimeout(() => { document.getElementById('prize-modal').classList.add('active'); }, 5000);
         }
+
         function showQR(plat) {
             document.getElementById('qr-title').innerText = `POST TO ${plat.toUpperCase()}`;
             const qrBox = document.getElementById('qrcode'); qrBox.innerHTML = "";
             new QRCode(qrBox, { text: `${BASE_URL}/share.html?scent=${match}&plat=${plat}`, width: 200, height: 200 });
             document.getElementById('qr-view').classList.add('active');
         }
+
         document.body.onclick = () => { if(document.getElementById('screensaver').classList.contains('active')) show('start'); };
         document.getElementById('start-btn').onclick = (e) => { e.stopPropagation(); loadQ(); show('quiz'); };
     </script>

@@ -1,24 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AXE Social Entry</title>
-    <style>body { background: #000; color: #fff; font-family: sans-serif; text-align: center; padding: 2rem; } .bottle { width: 70%; margin: 2rem 0; }</style>
+    <style>
+        body { background: #000; color: #fff; font-family: 'Montserrat', sans-serif; text-align: center; padding: 2rem; }
+        .bottle { width: 70%; margin: 2rem 0; }
+    </style>
 </head>
 <body>
-    <h2>PREPARING YOUR ENTRY...</h2><img id="scent-img" class="bottle">
+    <h2>PREPARING YOUR POST...</h2>
+    <img id="scent-img" class="bottle">
     <script>
         const params = new URLSearchParams(window.location.search);
         const scent = params.get('scent') || 'blackVanilla';
         const plat = params.get('plat') || 'instagram';
-        const scentNames = { blackVanilla:"BLACK VANILLA", aquaBergamot:"AQUA BERGAMOT", blueLavender:"BLUE LAVENDER", whiteOak:"WHITE OAK", copperSantal:"COPPER SANTAL" };
-        const scentImgs = { blackVanilla:"vanilla.png", aquaBergamot:"aqua.png", blueLavender:"lavender.png", whiteOak:"oak.png", copperSantal:"copper.png" };
-        document.getElementById('scent-img').src = scentImgs[scent];
-        const caption = `I just found my signature scent at the AXE Haus of Fine! 💎 @axe.sa #AxeXUltra26 #SmellFineAllNight`;
+        const caption = `Matched with my energy at the AXE Haus of Fine! 💎 @axe.sa #AxeXUltra26 #SmellFineAllNight`;
+        
+        const imgs = { blackVanilla:"vanilla.png", aquaBergamot:"aqua.png", blueLavender:"lavender.png", whiteOak:"oak.png", copperSantal:"copper.png" };
+        document.getElementById('scent-img').src = imgs[scent];
+
         setTimeout(() => {
             if (plat === 'twitter') { window.location.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(caption)}`; }
             else if (plat === 'facebook') { window.location.href = `https://www.facebook.com/sharer/sharer.php?u=${window.location.href}&quote=${encodeURIComponent(caption)}`; }
-            else { alert("Tag @axe.sa in your story to win!"); window.location.href = "instagram://camera"; }
+            else { window.location.href = "instagram://camera"; }
         }, 1500);
     </script>
 </body>

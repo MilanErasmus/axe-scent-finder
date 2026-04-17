@@ -12,6 +12,9 @@
         .bottle { width: 80%; max-height: 400px; object-fit: contain; margin: 2rem 0; }
         .share-btn { display: none; background: #fff !important; color: #000 !important; padding: 1.2rem; width: 100%; font-weight: 900; text-transform: uppercase; border: none; letter-spacing: 2px; }
         .instruction { color: #d4af37 !important; font-size: 0.7rem; font-weight: 700; margin-top: 1.5rem; text-transform: uppercase; }
+        
+        /* Hidden input for the copy hack */
+        #clip-box { position: absolute; left: -9999px; top: 0; }
     </style>
 </head>
 <body>
@@ -27,6 +30,8 @@
         <p class="instruction">3. PASTE CAPTION TO ENTER</p>
     </div>
 
+    <textarea id="clip-box" readonly></textarea>
+
     <script>
         const params = new URLSearchParams(window.location.search);
         const scent = params.get('scent') || 'blackVanilla';
@@ -36,18 +41,24 @@
         
         const caption = `My Fine Fragrance match! #AxeXUltra26 #SmellFineAllNight #AXEFineFragrances @axe.sa`;
         
-        function copyCaption() {
-            // Updated to use modern clipboard API first, fallback to execCommand
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(caption);
+        // REPLACED WITH THE HIDDEN ELEMENT HACK (MUCH MORE RELIABLE)
+        function forceCopy() {
+            const textArea = document.getElementById('clip-box');
+            textArea.value = caption;
+            
+            // Selection logic for iOS/Android
+            if (navigator.userAgent.match(/ipad|iphone/i)) {
+                const range = document.createRange();
+                range.selectNodeContents(textArea);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                textArea.setSelectionRange(0, 999999);
             } else {
-                const el = document.createElement('textarea');
-                el.value = caption;
-                document.body.appendChild(el);
-                el.select();
-                document.execCommand('copy');
-                document.body.removeChild(el);
+                textArea.select();
             }
+            
+            document.execCommand('copy');
         }
 
         let shareFile = null;
@@ -61,18 +72,22 @@
         }
 
         document.getElementById('share-trigger').onclick = async () => {
-            // CORE FIX: Copy caption inside the click handler
-            copyCaption();
-
-            if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
-                try {
-                    // LINK-KILL: Share ONLY the file to ensure 'Paste' works with the clipboard
-                    await navigator.share({ files: [shareFile] });
-                } catch (err) { console.log("Share cancelled"); }
-            } else { 
-                alert("Long-press the image to save and post manually!"); 
-            }
+            // STEP 1: FORCE THE COPY IMMEDIATELY
+            forceCopy();
+            
+            // STEP 2: TINY DELAY (300ms) TO ENSURE THE CLIPBOARD LOCKS
+            setTimeout(async () => {
+                if (navigator.canShare && navigator.canShare({ files: [shareFile] })) {
+                    try {
+                        // LINK-KILL: Share ONLY the file
+                        await navigator.share({ files: [shareFile] });
+                    } catch (err) { console.log("Share cancelled"); }
+                } else { 
+                    alert("Long-press the image to save and post manually!"); 
+                }
+            }, 300);
         };
+        
         window.onload = prep;
     </script>
 </body>
